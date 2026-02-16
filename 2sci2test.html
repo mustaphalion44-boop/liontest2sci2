@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2SCI2 · live student portal · attendance tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* animated background */
+        body {
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #1a2f3f, #2c3e50, #34495e, #2c3e50);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* floating particles effect */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* main portal container */
+        .portal {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 3rem;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.8s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* login overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
+        }
+
+        .login-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            animation: scaleIn 0.5s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .login-box h2 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.9);
+            transition: 0.3s;
+        }
+
+        .login-input:focus {
+            outline: none;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 50px;
+            background: #ffd700;
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            background: #ffed4a;
+        }
+
+        /* attendance bar with animation */
+        .attendance-bar {
+            background: linear-gradient(90deg, #1e2b3c, #2c3e50);
+            border-radius: 100px;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+            50% { box-shadow: 0 10px 40px rgba(255,215,0,0.3); }
+            100% { box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        }
+
+        .student-info {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            color: white;
+        }
+
+        .student-badge-large {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .attendance-time {
+            background: #27ae60;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* subject cards with 3D effect */
+        .subjects {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .subject-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-radius: 2rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .subject-card:hover::before {
+            opacity: 1;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 30px 40px rgba(0,0,0,0.2);
+        }
+
+        .subject-card.active-subject {
+            border: 4px solid #ffd700;
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(255,215,0,0.3);
+        }
+
+        .subject-icon {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* test panel */
+        .test-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.8);
+            animation: fadeInUp 0.8s;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-test-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #ffd700;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .active-test-header h2 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(10deg); }
+            100% { filter: hue-rotate(0deg); }
+        }
+
+        /* questions container */
+        .questions-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 1rem;
+            margin-bottom: 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #d9e3ed;
+        }
+
+        .questions-scroll::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .questions-scroll::-webkit-scrollbar-track {
+            background: #d9e3ed;
+            border-radius: 10px;
+        }
+
+        .questions-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        .question {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            border-radius: 1.8rem;
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            border-left: 10px solid #ccc;
+            transition: all 0.3s;
+            animation: slideIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .question:nth-child(odd) { animation-delay: 0.1s; }
+        .question:nth-child(even) { animation-delay: 0.2s; }
+
+        .question.correct-answer {
+            border-left: 10px solid #2ecc71;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        }
+
+        .question.wrong-answer {
+            border-left: 10px solid #e74c3c;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        }
+
+        .question p {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.5rem;
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .options label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .options label.selected-correct {
+            background: #2ecc71;
+            color: white;
+            animation: correctPulse 0.5s;
+        }
+
+        .options label.selected-wrong {
+            background: #e74c3c;
+            color: white;
+            animation: wrongShake 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* action buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn.verify-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            animation: glow 2s infinite;
+        }
+
+        /* attendance table */
+        .attendance-table {
+            margin-top: 2rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .attendance-table h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .table-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+
+        th {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.8rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 900px) {
+            .subjects { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 550px) {
+            .subjects { grid-template-columns: 1fr; }
+            .attendance-bar { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- login overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🎓 2SCI2 PORTAL</h2>
+            <input type="text" class="login-input" id="loginUsername" placeholder="Enter your name" autofocus>
+            <input type="password" class="login-input" id="loginPassword" placeholder="Password (any)">
+            <button class="login-btn" id="loginBtn">LOGIN & MARK ATTENDANCE</button>
+            <p style="color: white; text-align: center; margin-top: 1rem;">🔐 any password works for demo</p>
+        </div>
+    </div>
+
+    <div class="portal" id="mainPortal" style="display: none;">
+        <!-- attendance bar with date/time -->
+        <div class="attendance-bar">
+            <div class="student-info">
+                <span class="student-badge-large" id="displayName">Student</span>
+                <span class="attendance-time" id="attendanceTime">📅 loading...</span>
+            </div>
+            <div class="student-info">
+                <span>📋 attendance #<span id="attendanceCount">0</span></span>
+            </div>
+        </div>
+
+        <!-- subject cards -->
+        <div class="subjects">
+            <div class="subject-card" data-subject="math" id="sub-math">
+                <span class="subject-icon math">🧮</span>
+                <h3 style="color: #0f5e9c;">MATHEMATICS</h3>
+                <div style="font-size: 0.9rem;">percentages · mapping · simultaneous</div>
+            </div>
+            <div class="subject-card" data-subject="physics" id="sub-physics">
+                <span class="subject-icon physics">⚛️</span>
+                <h3 style="color: #b14e5c;">PHYSICS</h3>
+                <div style="font-size: 0.9rem;">density · dimensional · pressure</div>
+            </div>
+            <div class="subject-card" data-subject="chemistry" id="sub-chemistry">
+                <span class="subject-icon chemistry">🧪</span>
+                <h3 style="color: #2f7a5c;">CHEMISTRY</h3>
+                <div style="font-size: 0.9rem;">atomic · enthalpy · periodicity</div>
+            </div>
+            <div class="subject-card" data-subject="addmath" id="sub-addmath">
+                <span class="subject-icon addmath">📈</span>
+                <h3 style="color: #9b6b43;">ADD MATH</h3>
+                <div style="font-size: 0.9rem;">polynomial · surds · partial fractions</div>
+            </div>
+        </div>
+
+        <!-- test panel -->
+        <div class="test-panel">
+            <div class="active-test-header">
+                <h2 id="subjectTitle">MATHEMATICS</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <span class="student-badge-large" id="activeStudent">Student</span>
+                </div>
+            </div>
+
+            <div class="questions-scroll" id="questionsContainer">
+                <!-- questions injected via js -->
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn" id="clearTestBtn">🔄 Clear</button>
+                <button class="btn verify-btn" id="verifyAnswersBtn">🔍 Verify</button>
+                <button class="btn primary" id="submitTestBtn">✔️ Submit</button>
+                <div class="result-box" id="scoreDisplay">Score: --</div>
+            </div>
+        </div>
+
+        <!-- attendance history table -->
+        <div class="attendance-table">
+            <h3>📊 ATTENDANCE RECORDS</h3>
+            <div class="table-container">
+                <table id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceBody">
+                        <!-- attendance records will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== LOGIN SYSTEM WITH ATTENDANCE TRACKING ==========
+            const loginOverlay = document.getElementById('loginOverlay');
+            const mainPortal = document.getElementById('mainPortal');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginUsername = document.getElementById('loginUsername');
+            const loginPassword = document.getElementById('loginPassword');
+            const displayName = document.getElementById('displayName');
+            const activeStudent = document.getElementById('activeStudent');
+            const attendanceTime = document.getElementById('attendanceTime');
+            const attendanceCount = document.getElementById('attendanceCount');
+            const attendanceBody = document.getElementById('attendanceBody');
+
+            // attendance records array
+            let attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+            
+            // current user
+            let currentUser = '';
+            let currentSubject = 'math';
+
+            // particle background
+            function createParticles() {
+                const particles = document.getElementById('particles');
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    const size = Math.random() * 10 + 5;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animation = `float ${Math.random() * 10 + 10}s infinite`;
+                    particle.style.animationDelay = Math.random() * 5 + 's';
+                    particles.appendChild(particle);
+                }
+            }
+            createParticles();
+
+            // login function
+            function handleLogin() {
+                const name = loginUsername.value.trim();
+                if (name === '') {
+                    alert('Please enter your name');
+                    return;
+                }
+
+                currentUser = name;
+                
+                // get current date and time
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                const timeStr = now.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                // record attendance
+                const record = {
+                    student: currentUser,
+                    date: dateStr,
+                    time: timeStr,
+                    timestamp: now.getTime()
+                };
+                
+                attendanceRecords.unshift(record); // newest first
+                localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+
+                // update UI
+                displayName.innerText = currentUser;
+                activeStudent.innerText = currentUser;
+                attendanceTime.innerText = `📅 ${dateStr} ${timeStr}`;
+                attendanceCount.innerText = attendanceRecords.length;
+                
+                // show portal
+                loginOverlay.style.display = 'none';
+                mainPortal.style.display = 'block';
+                
+                // render attendance table
+                renderAttendanceTable();
+
+                // start real-time clock
+                startClock();
+            }
+
+            loginBtn.addEventListener('click', handleLogin);
+            
+            // enter key on password field
+            loginPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+
+            // real-time clock
+            function startClock() {
+                setInterval(() => {
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                    const timeStr = now.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    attendanceTime.innerText = `📅 ${dateStr} ${timeStr}`;
+                }, 1000);
+            }
+
+            // render attendance table
+            function renderAttendanceTable() {
+                let html = '';
+                attendanceRecords.slice(0, 10).forEach(record => {
+                    html += `<tr>
+                        <td>${record.student}</td>
+                        <td>${record.date}</td>
+                        <td>${record.time}</td>
+                    </tr>`;
+                });
+                attendanceBody.innerHTML = html || '<tr><td colspan="3">No attendance records yet</td></tr>';
+            }
+
+            // ========== QUESTION BANK ==========
+            const questionBank = {
+                math: [
+                    { q: "What is 25% of 240?", o: ["60", "50", "70", "80"], c: 0, topic: "percentages" },
+                    { q: "If a shirt costs $40 and is on 15% discount, what is the sale price?", o: ["$34", "$32", "$36", "$30"], c: 0, topic: "percentages" },
+                    { q: "Express 3/5 as a percentage.", o: ["60%", "30%", "75%", "50%"], c: 0, topic: "percentages" },
+                    { q: "A number increased by 20% becomes 60. Find the original number.", o: ["50", "48", "55", "52"], c: 0, topic: "percentages" },
+                    { q: "What percentage of 80 is 20?", o: ["25%", "20%", "30%", "40%"], c: 0, topic: "percentages" },
+                    { q: "In a function f: x → 2x+1, what is the image of 3?", o: ["7", "6", "5", "8"], c: 0, topic: "mapping" },
+                    { q: "If f(x)=x²-3, find f(4).", o: ["13", "16", "19", "12"], c: 0, topic: "mapping" },
+                    { q: "Which mapping is one-to-one?", o: ["f(x)=x³", "f(x)=x²", "f(x)=4", "f(x)=±√x"], c: 0, topic: "mapping" },
+                    { q: "Domain of f(x)=1/(x-2) is all reals except?", o: ["2", "-2", "0", "1"], c: 0, topic: "mapping" },
+                    { q: "If f(x)=3x-1 and g(x)=x+2, find fg(2).", o: ["11", "10", "12", "9"], c: 0, topic: "mapping" },
+                    { q: "Solve: x+y=10, x-y=4", o: ["(7,3)", "(6,4)", "(8,2)", "(5,5)"], c: 0, topic: "simultaneous" },
+                    { q: "Solve: 2x+3y=12, x-y=1", o: ["(3,2)", "(2,3)", "(4,1)", "(1,4)"], c: 0, topic: "simultaneous" },
+                    { q: "If 3x+2y=13 and 2x+3y=12, find x+y.", o: ["5", "6", "7", "4"], c: 0, topic: "simultaneous" },
+                    { q: "Solve for x: y=2x+1, 3x+2y=17", o: ["3", "2", "4", "5"], c: 0, topic: "simultaneous" },
+                    { q: "The sum of two numbers is 15, difference is 3. Find the smaller.", o: ["6", "9", "5", "7"], c: 0, topic: "simultaneous" },
+                    { q: "What is the gradient of line y=4x-3?", o: ["4", "-3", "3", "-4"], c: 0, topic: "theory" },
+                    { q: "Simplify 3(2x-4) + 5x", o: ["11x-12", "6x-12+5x", "11x+12", "6x-7"], c: 0, topic: "theory" },
+                    { q: "Factorize x²-9", o: ["(x-3)(x+3)", "(x-3)²", "(x+3)²", "(x-9)(x+1)"], c: 0, topic: "theory" },
+                    { q: "Solve 5x-2=3x+8", o: ["5", "4", "6", "3"], c: 0, topic: "theory" },
+                    { q: "If a=3, b=-2, find 2a-3b", o: ["12", "0", "6", "9"], c: 0, topic: "theory" }
+                ],
+                physics: [
+                    { q: "Formula for density?", o: ["mass/volume", "volume/mass", "mass×volume", "mass+volume"], c: 0, topic: "density" },
+                    { q: "Unit of density in SI?", o: ["kg/m³", "g/cm³", "kg/L", "all are valid"], c: 3, topic: "density" },
+                    { q: "If mass=10kg, volume=2m³, density=?", o: ["5 kg/m³", "20 kg/m³", "0.2 kg/m³", "8 kg/m³"], c: 0, topic: "density" },
+                    { q: "Which has higher density: iron or wood?", o: ["iron", "wood", "same", "depends"], c: 0, topic: "density" },
+                    { q: "Density of water at 4°C approx?", o: ["1000 kg/m³", "1 g/cm³", "both a and b", "800 kg/m³"], c: 2, topic: "density" },
+                    { q: "Dimension of force (F=ma)?", o: ["MLT⁻²", "MLT⁻¹", "ML²T⁻²", "M⁻¹LT²"], c: 0, topic: "dimensional" },
+                    { q: "Which is dimensionally correct for pressure?", o: ["ML⁻¹T⁻²", "MLT⁻²", "ML²T⁻²", "M⁻¹L⁻¹T²"], c: 0, topic: "dimensional" },
+                    { q: "Dimension of velocity?", o: ["LT⁻¹", "LT⁻²", "L²T⁻¹", "L⁻¹T"], c: 0, topic: "dimensional" },
+                    { q: "Energy has same dimension as?", o: ["work", "power", "force", "momentum"], c: 0, topic: "dimensional" },
+                    { q: "Dimensionless quantity?", o: ["strain", "stress", "pressure", "density"], c: 0, topic: "dimensional" },
+                    { q: "Pressure = ?", o: ["force/area", "area/force", "force×area", "mass/area"], c: 0, topic: "pressure" },
+                    { q: "SI unit of pressure?", o: ["Pascal", "Newton", "Joule", "Watt"], c: 0, topic: "pressure" },
+                    { q: "Atmospheric pressure at sea level approx?", o: ["101325 Pa", "100 Pa", "1000 Pa", "101 Pa"], c: 0, topic: "pressure" },
+                    { q: "Pressure in liquids increases with?", o: ["depth", "area", "volume", "temperature only"], c: 0, topic: "pressure" },
+                    { q: "1 atm = ? cm Hg", o: ["76", "100", "1", "760"], c: 0, topic: "pressure" },
+                    { q: "Archimedes' principle relates to?", o: ["buoyancy", "pressure", "density", "velocity"], c: 0, topic: "theory" },
+                    { q: "Bernoulli's equation applies to?", o: ["fluid flow", "solid mechanics", "thermodynamics", "optics"], c: 0, topic: "theory" },
+                    { q: "Hooke's law relates to?", o: ["spring force", "pressure", "density", "velocity"], c: 0, topic: "theory" },
+                    { q: "Which is a vector?", o: ["velocity", "speed", "mass", "time"], c: 0, topic: "theory" },
+                    { q: "Which is scalar?", o: ["temperature", "force", "displacement", "acceleration"], c: 0, topic: "theory" }
+                ],
+                chemistry: [
+                    { q: "Who proposed atomic theory?", o: ["Dalton", "Rutherford", "Bohr", "Thomson"], c: 0, topic: "atomic theory" },
+                    { q: "Subatomic particle with positive charge?", o: ["proton", "electron", "neutron", "positron"], c: 0, topic: "atomic theory" },
+                    { q: "Mass number = ?", o: ["protons+neutrons", "protons+electrons", "neutrons", "protons"], c: 0, topic: "atomic theory" },
+                    { q: "Isotopes have same number of?", o: ["protons", "neutrons", "nucleons", "electrons only"], c: 0, topic: "atomic theory" },
+                    { q: "Which model introduced planetary orbits?", o: ["Bohr", "Dalton", "Rutherford", "Quantum"], c: 0, topic: "atomic theory" },
+                    { q: "Enthalpy symbol?", o: ["H", "E", "U", "G"], c: 0, topic: "enthalpy" },
+                    { q: "Exothermic reaction ΔH ?", o: ["negative", "positive", "zero", "constant"], c: 0, topic: "enthalpy" },
+                    { q: "Standard enthalpy of formation of O₂(g)?", o: ["0", ">0", "<0", "not defined"], c: 0, topic: "enthalpy" },
+                    { q: "Bond breaking is?", o: ["endothermic", "exothermic", "isothermic", "adiabatic"], c: 0, topic: "enthalpy" },
+                    { q: "Hess's law relates to?", o: ["enthalpy change", "entropy", "free energy", "temperature"], c: 0, topic: "enthalpy" },
+                    { q: "Most electronegative element?", o: ["fluorine", "oxygen", "chlorine", "nitrogen"], c: 0, topic: "periodicity" },
+                    { q: "Atomic radius increases?", o: ["down group", "across period", "up group", "no trend"], c: 0, topic: "periodicity" },
+                    { q: "Noble gases are in group?", o: ["18", "17", "1", "2"], c: 0, topic: "periodicity" },
+                    { q: "Which is alkali metal?", o: ["sodium", "calcium", "aluminum", "magnesium"], c: 0, topic: "periodicity" },
+                    { q: "Ionization energy across period?", o: ["increases", "decreases", "constant", "varies randomly"], c: 0, topic: "periodicity" },
+                    { q: "pH of acid is ?", o: ["<7", ">7", "=7", "≥7"], c: 0, topic: "theory" },
+                    { q: "Catalyst effect on reaction?", o: ["lowers activation energy", "increases ΔH", "changes product", "no effect"], c: 0, topic: "theory" },
+                    { q: "Oxidation is?", o: ["loss of electrons", "gain of electrons", "gain of oxygen", "loss of hydrogen"], c: 0, topic: "theory" },
+                    { q: "Reducing agent?", o: ["donates electrons", "accepts electrons", "oxidizes", "precipitates"], c: 0, topic: "theory" },
+                    { q: "Organic compound containing -OH group?", o: ["alcohol", "alkane", "alkene", "alkyne"], c: 0, topic: "theory" }
+                ],
+                addmath: [
+                    { q: "Degree of polynomial 3x⁴+2x²-5?", o: ["4", "3", "2", "1"], c: 0, topic: "polynomial" },
+                    { q: "If P(x)=x³-3x+2, find P(2).", o: ["4", "2", "0", "6"], c: 0, topic: "polynomial" },
+                    { q: "Factor theorem: (x-a) is factor if?", o: ["P(a)=0", "P(0)=a", "P'(a)=0", "P(a)=1"], c: 0, topic: "polynomial" },
+                    { q: "Remainder when x³-2x²+3 divided by (x-1)?", o: ["2", "1", "0", "3"], c: 0, topic: "polynomial" },
+                    { q: "Quadratic polynomial max degree?", o: ["2", "1", "3", "0"], c: 0, topic: "polynomial" },
+                    { q: "Simplify √18", o: ["3√2", "2√3", "9√2", "√9·2"], c: 0, topic: "surds" },
+                    { q: "Rationalize 1/√3", o: ["√3/3", "√3", "1/3√3", "3/√3"], c: 0, topic: "surds" },
+                    { q: "Expand (√2+1)(√2-1)", o: ["1", "2", "3", "√2"], c: 0, topic: "surds" },
+                    { q: "√12 + √27 = ?", o: ["5√3", "√39", "6√3", "3√5"], c: 0, topic: "surds" },
+                    { q: "Conjugate of 3+√5", o: ["3-√5", "-3+√5", "-3-√5", "√5-3"], c: 0, topic: "surds" },
+                    { q: "Partial fraction of 1/(x(x+1)) form?", o: ["A/x + B/(x+1)", "A/(x+1) + B/x", "A/x + B/x²", "A/(x(x+1))"], c: 0, topic: "partial fractions" },
+                    { q: "For linear factor (x-a) we use?", o: ["A/(x-a)", "A/(x-a)²", "Ax+B/(x-a)", "A"], c: 0, topic: "partial fractions" },
+                    { q: "Decompose 2x/(x²-1)", o: ["1/(x-1)+1/(x+1)", "1/(x-1)-1/(x+1)", "2/(x-1)-2/(x+1)", "none"], c: 0, topic: "partial fractions" },
+                    { q: "Repeated factor (x-1)² gives terms?", o: ["A/(x-1)+B/(x-1)²", "A/(x-1)²", "A/(x-1)", "Ax+B/(x-1)²"], c: 0, topic: "partial fractions" },
+                    { q: "Partial fraction is used for?", o: ["integrating rational functions", "differentiating", "solving quadratics", "matrix inversion"], c: 0, topic: "partial fractions" },
+                    { q: "Binomial expansion (1+x)ⁿ first term?", o: ["1", "nx", "n(n-1)x²/2", "xⁿ"], c: 0, topic: "theory" },
+                    { q: "Log₂8 = ?", o: ["3", "2", "4", "1"], c: 0, topic: "theory" },
+                    { q: "Differentiate x⁵", o: ["5x⁴", "4x⁵", "5x⁵", "x⁴"], c: 0, topic: "theory" },
+                    { q: "∫ 3x² dx", o: ["x³+C", "x²+C", "3x³/3+C", "6x+C"], c: 0, topic: "theory" },
+                    { q: "tanθ = ?", o: ["sinθ/cosθ", "cosθ/sinθ", "1/cosθ", "1/sinθ"], c: 0, topic: "theory" }
+                ]
+            };
+
+            // user answers state
+            let userAnswers = {
+                math: new Array(20).fill(null),
+                physics: new Array(20).fill(null),
+                chemistry: new Array(20).fill(null),
+                addmath: new Array(20).fill(null)
+            };
+
+            // DOM elements for test
+            const subjectCards = document.querySelectorAll('.subject-card');
+            const subjectTitle = document.getElementById('subjectTitle');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const clearBtn = document.getElementById('clearTestBtn');
+            const verifyBtn = document.getElementById('verifyAnswersBtn');
+            const submitBtn = document.getElementById('submitTestBtn');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+
+            // subject switching
+            function setActiveSubject(subject) {
+                subjectCards.forEach(card => {
+                    card.classList.toggle('active-subject', card.dataset.subject === subject);
+                });
+            }
+
+            function renderQuestions() {
+                const questions = questionBank[currentSubject];
+                const answers = userAnswers[currentSubject];
+                let html = '';
+
+                questions.forEach((q, idx) => {
+                    const selectedIdx = answers[idx];
+                    const topicTag = q.topic ? `<span style="background: #4a6a8a; color: white; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.8rem; margin-left: 1rem;">${q.topic}</span>` : '';
+                    
+                    let indicatorHtml = '';
+                    if (selectedIdx !== null) {
+                        indicatorHtml = selectedIdx === q.c ? 
+                            '<span style="color: #27ae60; margin-left: 1rem;">✅ correct</span>' : 
+                            '<span style="color: #c0392b; margin-left: 1rem;">❌ wrong</span>';
+                    }
+
+                    const optionsHtml = q.o.map((opt, optIdx) => {
+                        const checked = selectedIdx === optIdx ? 'checked' : '';
+                        let labelClass = '';
+                        if (selectedIdx === optIdx) {
+                            labelClass = optIdx === q.c ? 'selected-correct' : 'selected-wrong';
+                        }
+                        return `<label class="${labelClass}"><input type="radio" name="q${idx}" value="${optIdx}" ${checked}> ${opt}</label>`;
+                    }).join('');
+
+                    let questionClass = 'question';
+                    if (selectedIdx !== null) {
+                        questionClass += selectedIdx === q.c ? ' correct-answer' : ' wrong-answer';
+                    }
+
+                    html += `
+                        <div class="${questionClass}" data-qidx="${idx}" style="animation-delay: ${idx * 0.05}s">
+                            <p>${idx+1}. ${q.q} ${topicTag} ${indicatorHtml}</p>
+                            <div class="options">${optionsHtml}</div>
+                        </div>
+                    `;
+                });
+
+                questionsContainer.innerHTML = html;
+
+                // attach listeners
+                questions.forEach((_, idx) => {
+                    document.querySelectorAll(`input[name="q${idx}"]`).forEach(radio => {
+                        radio.addEventListener('change', (e) => {
+                            const val = parseInt(e.target.value, 10);
+                            userAnswers[currentSubject][idx] = val;
+                            
+                            // update visual feedback
+                            const questionDiv = document.querySelector(`.question[data-qidx="${idx}"]`);
+                            if (questionDiv) {
+                                questionDiv.classList.remove('correct-answer', 'wrong-answer');
+                                questionDiv.classList.add(val === questions[idx].c ? 'correct-answer' : 'wrong-answer');
+                                
+                                // update indicator
+                                const indicator = questionDiv.querySelector('p span:last-child');
+                                if (indicator) {
+                                    indicator.outerHTML = val === questions[idx].c ? 
+                                        '<span style="color: #27ae60; margin-left: 1rem;">✅ correct</span>' : 
+                                        '<span style="color: #c0392b; margin-left: 1rem;">❌ wrong</span>';
+                                }
+                            }
+
+                            // update label classes
+                            const labels = document.querySelectorAll(`input[name="q${idx}"]`).forEach(r => {
+                                const lbl = r.closest('label');
+                                if (lbl) {
+                                    lbl.classList.remove('selected-correct', 'selected-wrong');
+                                    if (r.checked) {
+                                        lbl.classList.add(parseInt(r.value, 10) === questions[idx].c ? 'selected-correct' : 'selected-wrong');
+                                    }
+                                }
+                            });
+                        });
+                    });
+                });
+
+                subjectTitle.innerText = currentSubject.toUpperCase();
+            }
+
+            function switchSubject(subject) {
+                if (subject === currentSubject) return;
+                currentSubject = subject;
+                setActiveSubject(subject);
+                renderQuestions();
+                scoreDisplay.innerText = 'Score: --';
+            }
+
+            subjectCards.forEach(card => {
+                card.addEventListener('click', () => switchSubject(card.dataset.subject));
+            });
+
+            clearBtn.addEventListener('click', () => {
+                userAnswers[currentSubject] = new Array(20).fill(null);
+                renderQuestions();
+                scoreDisplay.innerText = 'Score: --';
+            });
+
+            verifyBtn.addEventListener('click', () => {
+                const questions = questionBank[currentSubject];
+                const answers = userAnswers[currentSubject];
+                let correct = 0;
+                questions.forEach((q, idx) => {
+                    if (answers[idx] !== null && answers[idx] === q.c) correct++;
+                });
+                scoreDisplay.innerText = `✅ ${correct}/20 correct`;
+            });
+
+            submitBtn.addEventListener('click', () => {
+                const questions = questionBank[currentSubject];
+                const answers = userAnswers[currentSubject];
+                let correct = 0;
+                questions.forEach((q, idx) => {
+                    if (answers[idx] !== null && answers[idx] === q.c) correct++;
+                });
+                scoreDisplay.innerText = `Score: ${correct}/20`;
+                
+                // record test attempt in attendance? we could, but keeping simple
+            });
+
+            // initial render of attendance table if any
+            renderAttendanceTable();
+        })();
+    </script>
+</body>
+</html>
